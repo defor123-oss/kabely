@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Kabelový zapisník</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f5f5f0; min-height: 100vh; }
+
+  .wrap { max-width: 700px; margin: 0 auto; padding: 1.5rem 1rem 3rem; }
+
+  h1 { font-size: 20px; font-weight: 600; color: #1a1a1a; margin-bottom: 4px; }
+  .subtitle { font-size: 14px; color: #888; margin-bottom: 2rem; }
+
+  /* Login */
+  .login-card { background: #fff; border: 1px solid #e5e5e5; border-radius: 14px; padding: 2.5rem 2rem; text-align: center; max-width: 360px; margin: 3rem auto; }
+  .login-card h2 { font-size: 20px; font-weight: 600; margin-bottom: 8px; color: #1a1a1a; }
+  .login-card p { font-size: 14px; color: #666; margin-bottom: 2rem; line-height: 1.6; }
+  .btn-google { display: flex; align-items: center; justify-content: center; gap: 10px; background: #fff; border: 1px solid #ddd; border-radius: 10px; padding: 12px 20px; font-size: 15px; font-weight: 500; cursor: pointer; width: 100%; color: #333; transition: background .15s; }
+  .btn-google:hover { background: #f9f9f9; }
+  .btn-google svg { width: 20px; height: 20px; flex-shrink: 0; }
+
+  /* Topbar */
+  .topbar { display: flex; align-items: center; gap: 10px; margin-bottom: 1.25rem; flex-wrap: wrap; }
+  .proj-bar { background: #fff; border: 1px solid #e5e5e5; border-radius: 10px; padding: 9px 14px; display: flex; align-items: center; gap: 10px; flex: 1; min-width: 0; }
+  .proj-label { font-size: 13px; color: #888; white-space: nowrap; }
+  .proj-input { border: none; background: transparent; font-size: 14px; font-weight: 600; color: #1a1a1a; flex: 1; outline: none; font-family: inherit; min-width: 0; }
+  .user-pill { display: flex; align-items: center; gap: 8px; }
+  .avatar { width: 32px; height: 32px; border-radius: 50%; object-fit: cover; border: 1px solid #e5e5e5; }
+  .avatar-init { width: 32px; height: 32px; border-radius: 50%; background: #dbeafe; color: #1d4ed8; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 600; flex-shrink: 0; }
+  .btn-logout { font-size: 12px; color: #666; background: none; border: 1px solid #e5e5e5; border-radius: 8px; padding: 5px 12px; cursor: pointer; font-family: inherit; white-space: nowrap; }
+  .btn-logout:hover { background: #f5f5f5; }
+
+  .sync-row { display: flex; align-items: center; gap: 6px; margin-bottom: 1.25rem; }
+  .sync-dot { width: 8px; height: 8px; border-radius: 50%; background: #16a34a; flex-shrink: 0; }
+  .sync-label { font-size: 13px; color: #888; }
+
+  /* Form card */
+  .form-card { background: #fff; border: 1px solid #e5e5e5; border-radius: 14px; padding: 1.25rem; margin-bottom: 1.25rem; }
+  .section-title { font-size: 15px; font-weight: 600; color: #1a1a1a; margin-bottom: 1rem; display: flex; justify-content: space-between; align-items: center; }
+  .badge { font-size: 12px; font-weight: 500; background: #f5f5f0; color: #666; padding: 3px 12px; border-radius: 99px; border: 1px solid #e5e5e5; }
+
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; }
+  .grid3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; margin-bottom: 12px; }
+  @media (max-width: 500px) { .grid2 { grid-template-columns: 1fr; } .grid3 { grid-template-columns: 1fr 1fr; } }
+
+  label { font-size: 13px; color: #666; display: block; margin-bottom: 5px; }
+  input, select, textarea { width: 100%; font-family: inherit; font-size: 14px; border: 1px solid #e5e5e5; border-radius: 8px; padding: 9px 12px; color: #1a1a1a; background: #fafafa; outline: none; transition: border .15s; }
+  input:focus, select:focus, textarea:focus { border-color: #aaa; background: #fff; }
+  textarea { resize: vertical; min-height: 70px; }
+
+  .photo-area { border: 1.5px dashed #ccc; border-radius: 10px; padding: 1rem; text-align: center; cursor: pointer; color: #888; font-size: 13px; margin-bottom: 12px; transition: background .15s; }
+  .photo-area:hover { background: #f9f9f9; }
+  .photo-preview { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
+  .photo-thumb { width: 68px; height: 68px; object-fit: cover; border-radius: 8px; border: 1px solid #e5e5e5; }
+
+  .btn-primary { background: #1a1a1a; color: #fff; border: none; border-radius: 10px; padding: 12px 20px; font-size: 15px; font-weight: 500; cursor: pointer; width: 100%; font-family: inherit; transition: opacity .15s; }
+  .btn-primary:hover { opacity: .85; }
+  .btn-primary:disabled { opacity: .45; cursor: default; }
+
+  /* Cable items */
+  .cable-item { border: 1px solid #e5e5e5; border-radius: 10px; padding: 13px; margin-bottom: 8px; background: #fafafa; }
+  .cable-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 6px; gap: 8px; }
+  .cable-name { font-size: 14px; font-weight: 600; color: #1a1a1a; }
+  .cable-del { font-size: 12px; color: #dc2626; cursor: pointer; background: none; border: none; font-family: inherit; white-space: nowrap; flex-shrink: 0; }
+  .cable-meta { font-size: 13px; color: #555; line-height: 1.7; }
+  .cable-photos { display: flex; gap: 6px; margin-top: 8px; flex-wrap: wrap; }
+  .cable-photo { width: 56px; height: 56px; object-fit: cover; border-radius: 8px; border: 1px solid #e5e5e5; }
+  .author-label { font-size: 11px; color: #aaa; margin-top: 5px; }
+
+  .type-badge { display: inline-block; font-size: 11px; padding: 2px 9px; border-radius: 99px; margin-left: 7px; font-weight: 500; }
+  .type-chlazeni { background: #dbeafe; color: #1d4ed8; }
+  .type-elektro { background: #dcfce7; color: #166534; }
+  .type-slabo { background: #fef9c3; color: #854d0e; }
+  .type-jiny { background: #f3f4f6; color: #374151; }
+
+  .export-row { display: flex; gap: 8px; margin-top: 1rem; }
+  .btn-outline { background: transparent; border: 1px solid #e5e5e5; border-radius: 10px; padding: 10px 16px; font-size: 13px; cursor: pointer; color: #333; font-family: inherit; flex: 1; transition: background .15s; }
+  .btn-outline:hover { background: #f5f5f5; }
+
+  .empty { text-align: center; color: #aaa; font-size: 14px; padding: 2.5rem 0; }
+  .loading { text-align: center; color: #aaa; font-size: 14px; padding: 3rem 0; }
+
+  /* Print styles */
+  @media print {
+    body { background: #fff; }
+    .no-print { display: none !important; }
+    .form-card:first-of-type { display: none; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div id="loadingView" class="loading">Připojuji se k Firebase…</div>
+
+  <div id="loginView" style="display:none;">
+    <div class="login-card">
+      <h2>Kabelový zapisník</h2>
+      <p>Přihlas se Google účtem. Záznamy se synchronizují v reálném čase na všech zařízeních celé party.</p>
+      <button class="btn-google" onclick="signIn()">
+        <svg viewBox="0 0 48 48">
+          <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
+          <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/>
+          <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/>
+          <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
+        </svg>
+        Přihlásit se přes Google
+      </button>
+    </div>
+  </div>
+
+  <div id="appView" style="display:none;">
+    <div class="topbar no-print">
+      <div class="proj-bar">
+        <span class="proj-label">Projekt:</span>
+        <input class="proj-input" type="text" id="projectName" placeholder="název stavby / marketu" />
+      </div>
+      <div class="user-pill">
+        <div id="userAvatar" class="avatar-init">?</div>
+        <button class="btn-logout" onclick="doSignOut()">Odhlásit</button>
+      </div>
+    </div>
+
+    <div class="sync-row no-print">
+      <span class="sync-dot"></span>
+      <span class="sync-label">Synchronizováno v reálném čase přes Firebase</span>
+    </div>
+
+    <div class="form-card no-print">
+      <div class="section-title">Nový kabel</div>
+      <div class="grid2">
+        <div>
+          <label>Typ kabelu</label>
+          <select id="cableType">
+            <option value="chlazeni">Chlazení</option>
+            <option value="elektro">Elektro – silnoproud</option>
+            <option value="slabo">Slaboproud / data</option>
+            <option value="jiny">Jiný</option>
+          </select>
+        </div>
+        <div>
+          <label>Označení / název</label>
+          <input type="text" id="cableName" placeholder="např. CYKY 3x2.5, CHSF-E…" />
+        </div>
+      </div>
+      <div class="grid3">
+        <div>
+          <label>Délka (m)</label>
+          <input type="number" id="cableLength" placeholder="0" min="0" />
+        </div>
+        <div>
+          <label>Odkud</label>
+          <input type="text" id="cableFrom" placeholder="rozvaděč R1…" />
+        </div>
+        <div>
+          <label>Kam</label>
+          <input type="text" id="cableTo" placeholder="kompresor, zásuvka…" />
+        </div>
+      </div>
+      <div style="margin-bottom:12px;">
+        <label>Poznámka</label>
+        <textarea id="cableNote" placeholder="trasa, patro, zvláštnosti…"></textarea>
+      </div>
+      <div class="photo-area" onclick="document.getElementById('photoInput').click()">
+        + Přidat foto (trasa, štítek, detail)
+      </div>
+      <input type="file" id="photoInput" accept="image/*" multiple style="display:none" onchange="handlePhotos(event)" />
+      <div class="photo-preview" id="photoPreview"></div>
+      <button class="btn-primary" id="addBtn" onclick="addCable()">Přidat kabel do seznamu</button>
+    </div>
+
+    <div class="form-card">
+      <div class="section-title">
+        <span>Seznam kabelů</span>
+        <span class="badge" id="countBadge">0 ks</span>
+      </div>
+      <div id="cableList"><div class="loading">Načítám záznamy…</div></div>
+      <div class="export-row no-print">
+        <button class="btn-outline" onclick="exportCSV()">Export CSV (Excel)</button>
+        <button class="btn-outline" onclick="window.print()">Tisk / PDF</button>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getAuth, GoogleAuthProvider, signInWithPopup, signInWithRedirect, getRedirectResult, onAuthStateChanged, signOut as fbSignOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import { getFirestore, collection, addDoc, deleteDoc, doc, onSnapshot, serverTimestamp, query, orderBy } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyApWhmi-5zwBq_Ydh2pxqQqds4zKjV_IU0",
+  authDomain: "kabely.firebaseapp.com",
+  projectId: "kabely",
+  storageBucket: "kabely.firebasestorage.app",
+  messagingSenderId: "7941315688",
+  appId: "1:7941315688:web:dd0f6bb2e3f4f496f46fdd",
+  measurementId: "G-K2C9LVSC4Z"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+
+const typeLabel = { chlazeni: 'Chlazení', elektro: 'Elektro', slabo: 'Slaboproud', jiny: 'Jiný' };
+
+let cables = [];
+let pendingPhotos = [];
+let unsubscribe = null;
+
+window.signIn = async () => {
+  const provider = new GoogleAuthProvider();
+  provider.setCustomParameters({ prompt: 'select_account' });
+  try {
+    await signInWithPopup(auth, provider);
+  } catch(e) {
+    if (e.code !== 'auth/popup-blocked' && e.code !== 'auth/popup-closed-by-user') {
+      alert('Přihlášení selhalo: ' + e.message);
+    }
+  }
+};
+
+window.doSignOut = async () => {
+  if (unsubscribe) unsubscribe();
+  await fbSignOut(auth);
+};
+
+window.handlePhotos = (e) => {
+  Array.from(e.target.files).forEach(f => {
+    const reader = new FileReader();
+    reader.onload = ev => { pendingPhotos.push(ev.target.result); renderPreview(); };
+    reader.readAsDataURL(f);
+  });
+};
+
+function renderPreview() {
+  document.getElementById('photoPreview').innerHTML =
+    pendingPhotos.map(src => `<img class="photo-thumb" src="${src}" />`).join('');
+}
+
+window.addCable = async () => {
+  const name = document.getElementById('cableName').value.trim();
+  if (!name) { document.getElementById('cableName').focus(); return; }
+  const btn = document.getElementById('addBtn');
+  btn.disabled = true; btn.textContent = 'Ukládám…';
+  const user = auth.currentUser;
+  const proj = document.getElementById('projectName').value.trim() || 'Bez názvu';
+  try {
+    await addDoc(collection(db, 'cables'), {
+      projekt: proj,
+      type: document.getElementById('cableType').value,
+      name,
+      length: document.getElementById('cableLength').value || '—',
+      from: document.getElementById('cableFrom').value.trim() || '—',
+      to: document.getElementById('cableTo').value.trim() || '—',
+      note: document.getElementById('cableNote').value.trim(),
+      photos: pendingPhotos,
+      addedBy: user.displayName || user.email,
+      createdAt: serverTimestamp()
+    });
+    pendingPhotos = [];
+    document.getElementById('photoPreview').innerHTML = '';
+    document.getElementById('photoInput').value = '';
+    ['cableName','cableLength','cableFrom','cableTo','cableNote']
+      .forEach(id => document.getElementById(id).value = '');
+  } catch(e) { alert('Chyba při ukládání: ' + e.message); }
+  btn.disabled = false; btn.textContent = 'Přidat kabel do seznamu';
+};
+
+window.deleteCable = async (id) => {
+  if (!confirm('Smazat tento záznam?')) return;
+  try { await deleteDoc(doc(db, 'cables', id)); }
+  catch(e) { alert('Chyba: ' + e.message); }
+};
+
+function renderList() {
+  const list = document.getElementById('cableList');
+  document.getElementById('countBadge').textContent = cables.length + ' ks';
+  if (!cables.length) {
+    list.innerHTML = '<div class="empty">Zatím žádné kabely. Přidej první záznam.</div>';
+    return;
+  }
+  list.innerHTML = cables.map((c, i) => `
+    <div class="cable-item">
+      <div class="cable-header">
+        <span class="cable-name">${c.name}
+          <span class="type-badge type-${c.type}">${typeLabel[c.type] || c.type}</span>
+        </span>
+        <button class="cable-del no-print" onclick="deleteCable('${c.id}')">smazat</button>
+      </div>
+      <div class="cable-meta">
+        Délka: <strong>${c.length} m</strong> &nbsp;|&nbsp;
+        Odkud: <strong>${c.from}</strong> &nbsp;→&nbsp;
+        Kam: <strong>${c.to}</strong>
+        ${c.note ? '<br>Pozn.: ' + c.note : ''}
+        ${c.projekt ? '<br>Projekt: ' + c.projekt : ''}
+      </div>
+      <div class="author-label">Přidal: ${c.addedBy || '—'}</div>
+      ${c.photos && c.photos.length
+        ? `<div class="cable-photos">${c.photos.map(p => `<img class="cable-photo" src="${p}" />`).join('')}</div>`
+        : ''}
+    </div>
+  `).join('');
+}
+
+window.exportCSV = () => {
+  let csv = '\uFEFF' + 'Projekt;Typ;Označení;Délka (m);Odkud;Kam;Poznámka;Přidal\n';
+  cables.forEach(c => {
+    csv += [c.projekt, typeLabel[c.type]||c.type, c.name, c.length, c.from, c.to, c.note, c.addedBy]
+      .map(v => '"' + String(v||'').replace(/"/g,'""') + '"').join(';') + '\n';
+  });
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'kabely.csv';
+  a.click();
+};
+
+getRedirectResult(auth).catch(e => console.log('redirect result:', e));
+
+onAuthStateChanged(auth, user => {
+  document.getElementById('loadingView').style.display = 'none';
+  if (user) {
+    document.getElementById('loginView').style.display = 'none';
+    document.getElementById('appView').style.display = 'block';
+    const av = document.getElementById('userAvatar');
+    if (user.photoURL) {
+      av.outerHTML = `<img id="userAvatar" class="avatar" src="${user.photoURL}" />`;
+    } else {
+      av.textContent = (user.displayName || user.email || '?')[0].toUpperCase();
+    }
+    const q = query(collection(db, 'cables'), orderBy('createdAt', 'desc'));
+    unsubscribe = onSnapshot(q, snap => {
+      cables = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      renderList();
+    });
+  } else {
+    document.getElementById('loginView').style.display = 'block';
+    document.getElementById('appView').style.display = 'none';
+    cables = [];
+  }
+});
+</script>
+</body>
+</html>
